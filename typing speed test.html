@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Speed Test</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Background styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #1c1f24, #31373f); /* Dark gradient */
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Container styling with shadow and background overlay */
+        .container, .welcome-container {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(12px);
+            color: #e0e0e0;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        /* Headings and subtext */
+        h1 {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
+        p {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            color: #b3b3b3;
+        }
+
+        /* Button styling with transitions */
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 5px;
+            background: #4a90e2;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3b7abf;
+            transform: translateY(-2px);
+        }
+
+        /* Button variants for different actions */
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #1c1f24;
+        }
+
+        /* Text area and stats styling */
+        #test-text {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 1.1em;
+            color: #e0e0e0;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .stats {
+            margin-top: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Timer and stats display */
+        .timer, .stat {
+            font-weight: bold;
+        }
+
+        /* Highlight correct and incorrect letters */
+        .correct {
+            color: lightgreen;
+            font-weight: bold;
+        }
+        
+        .incorrect {
+            color: #ff3d3d;
+            font-weight: bold;
+        }
+
+        /* Animation for fading elements in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Footer for branding */
+        .footer {
+            margin-top: 20px;
+            color: #8c8c8c;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Section -->
+    <div class="welcome-container" id="welcome">
+        <h1>Welcome to the Typing Speed Test!</h1>
+        <p>Challenge your typing speed and accuracy. Let's see how fast you can go!</p>
+        <button onclick="showTypingTest()">Start Typing Test</button>
+    </div>
+
+    <!-- Typing Test Section -->
+    <div class="container" id="typing-test" style="display: none;">
+        <h1>Typing Speed Test</h1>
+        <div id="test-text">
+            <span id="highlighted-text">
+                Kerala's most audacious make-a-thon! This 18-hour overnight event challenges TinkerHub Campus Chapter students to create brilliantly impractical tech solutions. Participants can build anything using software, hardware, or both - as long as it's purposefully useless! It's a playground for unbridled creativity, skill development, and the chance to win exciting prizes, including a 6-month scholarship.
+            </span>
+        </div>
+        <textarea id="user-input" class="form-control" placeholder="Start typing here..." disabled></textarea>
+        <button id="start-button" class="btn btn-success">Start Test</button>
+        <button id="stop-button" class="btn btn-danger" onclick="stopTest()">Stop Test</button>
+        <button id="resume-button" class="btn btn-warning" onclick="resumeTest()" style="display: none;">Resume Test</button> <!-- New Resume Button -->
+        <button onclick="resetTest()" class="btn btn-warning">Reset Test</button>
+        <div class="stats">
+            <p class="timer">Time Left: <span id="timer">60</span> seconds</p>
+            <p>Speed: <span id="wpm">0</span> WPM</p>
+            <p>Accuracy: <span id="accuracy">100</span>%</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 Typing Speed Test | Powered by ANALOKHAM</p>
+        </div>
+    </div>
+
+    <script>
+        // Typing Test Logic
+        let currentText = "Kerala's most audacious make-a-thon! This 18-hour overnight event challenges TinkerHub Campus Chapter students to create brilliantly impractical tech solutions. Participants can build anything using software, hardware, or both - as long as it's purposefully useless! It's a playground for unbridled creativity, skill development, and the chance to win exciting prizes, including a 6-month scholarship.";
+        let timerInterval;
+        let timeLeft = 60;
+        let isTesting = false;  // To track if the test is currently active
+
+        // DOM elements
+        const userInputElement = document.getElementById("user-input");
+        const startButton = document.getElementById("start-button");
+        const stopButton = document.getElementById("stop-button");
+        const resumeButton = document.getElementById("resume-button");
+        const wpmElement = document.getElementById("wpm");
+        const accuracyElement = document.getElementById("accuracy");
+        const timerElement = document.getElementById("timer");
+        const highlightedTextElement = document.getElementById("highlighted-text");
+
+        // Show Typing Test
+        function showTypingTest() {
+            document.getElementById('welcome').style.display = 'none';
+            document.getElementById('typing-test').style.display = 'block';
+        }
+
+        // Start Test
+        startButton.addEventListener("click", function() {
+            startTest();
+        });
+
+        function startTest() {
+            userInputElement.value = "";
+            userInputElement.disabled = false;
+            userInputElement.focus();
+            timeLeft = 60;
+            timerElement.textContent = timeLeft;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(countdown, 1000);
+            startButton.disabled = true;
+            stopButton.style.display = 'inline-block';
+            resumeButton.style.display = 'none';  // Hide resume button
+            isTesting = true;
+        }
+
+        // Countdown Timer
+        function countdown() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+            } else {
+                endTest();
+            }
+        }
+
+        // Update Stats and Highlighting
+        userInputElement.addEventListener("input", function() {
+            const typedText = userInputElement.value;
+            let displayedText = '';
+
+            // Loop through each character in the typed text
+            for (let i = 0; i < typedText.length; i++) {
+                if (typedText[i] === currentText[i]) {
+                    displayedText += `<span class="correct">${typedText[i]}</span>`; // Correct
+                } else {
+                    displayedText += `<span class="incorrect">${typedText[i]}</span>`; // Incorrect
+                }
+            }
+
+            // Handle highlighting of the text above
+            highlightedTextElement.innerHTML = '';
+            for (let i = 0; i < currentText.length; i++) {
+                if (i < typedText.length) {
+                    if (typedText[i] === currentText[i]) {
+                        highlightedTextElement.innerHTML += `<span class="correct">${currentText[i]}</span>`;
+                    } else {
+                        highlightedTextElement.innerHTML += `<span class="incorrect">${currentText[i]}</span>`;
+                    }
+                } else {
+                    highlightedTextElement.innerHTML += currentText[i]; // Display untyped characters normally
+                }
+            }
+
+            const elapsedTime = (60 - timeLeft) / 60;
+            const wpm = Math.round((typedText.length / 5) / elapsedTime);
+            const accuracy = Math.round((typedText.split('').filter((char, i) => char === currentText[i]).length / typedText.length) * 100);
+
+            wpmElement.textContent = isNaN(wpm) ? 0 : wpm;
+            accuracyElement.textContent = isNaN(accuracy) ? 0 : accuracy;
+        });
+
+        // End Test
+        function endTest() {
+            clearInterval(timerInterval);
+            startButton.disabled = false;
+            userInputElement.disabled = true;
+            isTesting = false;
+            stopButton.style.display = 'none'; // Hide Stop button
+            resumeButton.style.display = 'none'; // Hide Resume button
+            alert("Test completed! Speed: " + wpmElement.textContent + " WPM | Accuracy: " + accuracyElement.textContent + "%");
+            resetStats();
+        }
+
+        // Stop Test Function
+        function stopTest() {
+            clearInterval(timerInterval);
+            userInputElement.disabled = true;
+            isTesting = false;
+            stopButton.style.display = 'none'; // Hide Stop button
+            resumeButton.style.display = 'inline-block'; // Show Resume button
+            startButton.disabled = false;
+
+            alert("Test stopped! Current Speed: " + wpmElement.textContent + " WPM | Accuracy: " + accuracyElement.textContent + "%");
+        }
+
+        // Resume Test Function
+        function resumeTest() {
+            userInputElement.disabled = false;
+            userInputElement.focus();
+            timerInterval = setInterval(countdown, 1000);
+            stopButton.style.display = 'inline-block'; // Show Stop button
+            resumeButton.style.display = 'none'; // Hide Resume button
+            isTesting = true;
+        }
+
+        // Reset Test Function
+        function resetTest() {
+            clearInterval(timerInterval);
+            userInputElement.value = "";
+            userInputElement.disabled = true;  // Disable typing area
+            highlightedTextElement.innerHTML = currentText; // Restore the original text
+            timerElement.textContent = "60";   // Reset timer display
+            timeLeft = 60;                     // Reset time
+            wpmElement.textContent = "0";      // Reset WPM
+            accuracyElement.textContent = "100"; // Reset accuracy
+            startButton.disabled = false;      // Re-enable start button
+            stopButton.style.display = 'none'; // Hide Stop button
+            resumeButton.style.display = 'none'; // Hide Resume button
+            isTesting = false; // Reset testing state
+        }
+
+        // Helper function to reset stats
+        function resetStats() {
+            wpmElement.textContent = "0"; // Reset WPM
+            accuracyElement.textContent = "100"; // Reset accuracy
+        }
+    </script>
+</body>
+</html>
